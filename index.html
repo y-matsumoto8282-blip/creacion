@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>あなたにおすすめの種族診断</title>
+<style>
+:root{--bg:#f6f1e7;--card:#fffdf8;--text:#2d2a26;--sub:#6e675d;--accent:#7a5c9e;--line:#e2d9c8;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1b1a22;--card:#25232e;--text:#eee9f5;--sub:#a9a2b8;--accent:#b79ae0;--line:#3a3748;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#1b1a22;--card:#25232e;--text:#eee9f5;--sub:#a9a2b8;--accent:#b79ae0;--line:#3a3748;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"Hiragino Mincho ProN","Yu Mincho",serif;line-height:1.7}
+main{max-width:560px;margin:0 auto;padding:24px 16px 48px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px;text-align:center}
+h1{font-size:1.5rem;margin:0 0 8px}h2{font-size:1.15rem;margin:0 0 16px}
+p{color:var(--sub);margin:8px 0 20px}
+button{font:inherit;color:var(--text);background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px 16px;width:100%;margin:6px 0;cursor:pointer;text-align:left}
+button:hover{border-color:var(--accent)}
+button.main{background:var(--accent);color:#fff;text-align:center;border:0}
+.bar{height:6px;background:var(--line);border-radius:3px;margin-bottom:20px}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:3px;transition:width .3s}
+.img{width:200px;height:200px;margin:0 auto 12px;border-radius:50%;background:var(--bg);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:96px;overflow:hidden}
+.img img{width:100%;height:100%;object-fit:cover}
+.tag{color:var(--accent);margin:0 0 4px}
+.desc{color:var(--text);text-align:left}
+.second{font-size:.9rem}
+.note{color:var(--text);text-align:left;font-size:.9rem;border-left:3px solid var(--accent);padding-left:12px;margin:0 0 20px}
+.jobs{text-align:left;margin:4px 0 20px}.jobs h3{font-size:1rem;margin:0 0 10px;text-align:center}
+.job{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:.9rem}
+.job span:first-child{width:5.5em;flex:none}.job span:last-child{width:3em;text-align:right;flex:none;color:var(--sub)}
+.gauge{flex:1;height:10px;background:var(--line);border-radius:5px;overflow:hidden}.gauge i{display:block;height:100%;background:var(--accent);border-radius:5px}
+</style>
+</head>
+<body>
+<main><div class="card" id="app"></div></main>
+<script>
+	/* ===== ここを編集すれば内容を変更・追加できます ===== */
+	// 種族を増やす: RACES に1つ追加し、QUESTIONS の score にそのidで点数を足す
+	// note: 説明文の下に出る追加の文章(空なら表示されません)
+	// image: 画像のURL(例 "img/elf.png")。空なら emoji が仮表示されます
+	const RACES=[
+	{id:"human",name:"人間",emoji:"🧑",image:"",tagline:"可能性にあふれた万能の種族",desc:"世界で一番数の多い種族。努力と絆で道を切り開く、柔軟で適応力の高い種族。短命だが、その一生で数多の神から加護を受けられるという。",note:""},
+	{id:"elf",name:"エルフ",emoji:"🧝",image:"",tagline:"森とともに生きる気高き種族",desc:"静かなる観察者。知性と美意識に優れ、静けさの中で長い時を過ごす。出身地によって寿命が大きく異なる。ほとんどは線の細い整った顔立ちをしている。これは美の女神がこの種族をつくったとされることから一般的なことである。",note:""},
+	{id:"darkelf",name:"ダークエルフ",emoji:"🏹",image:"",tagline:"砂漠を歩く狩人の種族",desc:"かつてはエルフであったが、数万年前に分化した種族。砂漠に順応し、そのほとんどは暗い色の肌と薄い色素の髪をもつ。身体能力や索敵に優れており、冒険者として重宝されることが多い。小さな民族も多く、旅をしていても故郷とのつながりを大事にしているものが多い。",note:""},
+	{id:"beast",name:"獣人",emoji:"🐺",image:"",tagline:"仲間を守る野性の種族",desc:"。鋭い感覚と強い仲間意識を持つ、情熱的な種族。獣神の加護の元繁栄したとされており、多種多様な姿をしている。遺伝子の優劣によっては人間に近い姿をもって産まれることもあるが、大抵は脚力などに獣人としての能力を残していることが多い。",note:""},
+	{id:"magic",name:"魔人",emoji:"😈",image:"",tagline:"神の血を引く長命の種族",desc:"かつて神から産まれた種族。角と翼をもつ者が多く、その多くは恐るべき魔力を有している。吸血種や精霊種などもこれに該当する。強さと誇りを備え、高みを目指し続ける種族。",note:""},
+	{id:"oni",name:"鬼人",emoji:"👹",image:"",tagline:"伝統と共に生きる強かな種族",desc:"保守的な考えの多い種族。見た目からは想像のつかないほどの膂力をもつ。元々は東の孤島から始まったとされ、その誕生は謎が多い。その性質ゆえかあまり群れることがなく、他の種族と行動することも少ない。絆を築ければそれは彼らにとって誓いのような強固なものとなる。",note:""}
+	];
+	// 職業の割合(%): 種族idごとに {n:職業名, p:割合} を並べる。合計100になるのが目安
+	const JOBS={
+	human:[{n:"冒険者",p:35},{n:"騎士・兵士",p:25},{n:"農民",p:25},{n:"商人",p:15}],
+	elf:[{n:"魔術師",p:35},{n:"弓使い",p:30},{n:"薬師",p:20},{n:"研究者",p:15}],
+	darkelf:[{n:"冒険者",p:50},{n:"密偵",p:30},{n:"狩人",p:15},{n:"薬師",p:10}],
+	beast:[{n:"冒険者",p:35},{n:"傭兵",p:30},{n:"運び屋",p:20},{n:"農家",p:15}],
+	magic:[{n:"探求者",p:40},{n:"貴族",p:30},{n:"魔術師",p:20},{n:"学者",p:10}],
+	oni:[{n:"傭兵",p:35},{n:"守り人",p:30},{n:"その他",p:20},{n:"呪術師",p:15}]
+	};
+	const QUESTIONS=[
+	{q:"休日はどう過ごす？",a:[
+	{t:"人と会って街へ出かける",s:{human:2,beast:1}},
+	{t:"静かな自然の中でのんびり",s:{elf:2,oni:1}},
+	{t:"何かを作ったり極めたりする",s:{elf:2,magic:1}},
+	{t:"まだ見ぬ場所へ冒険に出る",s:{human:2,beast:1,darkelf:1}}]},
+	{q:"いちばん大切にしたいものは？",a:[
+	{t:"仲間との絆",s:{human:2,beast:2}},
+	{t:"美しさと知性",s:{elf:2,magic:2}},
+	{t:"誇りと生き方",s:{oni:2,magic:1,darkelf:1}},
+	{t:"自由",s:{darkelf:2,beast:1}}]},
+	{q:"性格に近いのは？",a:[
+	{t:"好奇心旺盛でじっとしていられない",s:{beast:2,human:1,darkelf:1}},
+	{t:"冷静で落ち着いている",s:{elf:2,oni:1}},
+	{t:"情熱的で負けず嫌い",s:{magic:2,beast:1}},
+	{t:"面倒見がよく頼られる",s:{human:2,elf:1,magic:1}}]},
+	{q:"なりたい自分は？",a:[
+	{t:"強くてたくましい",s:{oni:2,darkelf:1,beast:1}},
+	{t:"賢くて気品がある",s:{elf:2,magic:2,darkelf:1}},
+	{t:"誰からも愛される",s:{human:2,beast:1}},
+	{t:"努力で成長し続ける",s:{human:2,oni:1,darkelf:1}}]},
+	{q:"仲間とトラブルになったら？",a:[
+	{t:"じっくり話し合う",s:{human:2,oni:1}},
+	{t:"ひとまず距離を置く",s:{magic:2,elf:1}},
+	{t:"正面からぶつかる",s:{darkelf:2,beast:1}},
+	{t:"黙って自分の作業に打ち込む",s:{oni:2,magic:1}}]}
+	];
+	/* ===== ここから下は基本的に触らなくてOK ===== */
+	const app=document.getElementById("app");
+	let i=0,score={};
+	function start(){i=0;score={};RACES.forEach(r=>score[r.id]=0);
+	app.innerHTML=`<h1>あなたにおすすめの種族診断</h1><p>${QUESTIONS.length}つの質問に答えると、あなたにぴったりの種族が見つかります。</p><button class="main" id="go">診断をはじめる</button>`;
+ document.getElementById("go").onclick=ask}
+function ask(){const Q=QUESTIONS[i];
+ app.innerHTML=`<div class="bar"><i style="width:${i/QUESTIONS.length*100}%"></i></div><h2>Q${i+1}. ${Q.q}</h2>`;
+ Q.a.forEach(o=>{const b=document.createElement("button");b.textContent=o.t;
+  b.onclick=()=>{for(const k in o.s)score[k]+=o.s[k];++i<QUESTIONS.length?ask():result()};app.appendChild(b)})}
+function jobsHtml(r){const j=JOBS[r.id];if(!j)return"";
+ return `<div class="jobs"><h3>${r.name}の職業の割合</h3>${j.map(x=>`<div class="job"><span>${x.n}</span><div class="gauge"><i style="width:${x.p}%"></i></div><span>${x.p}%</span></div>`).join("")}</div>`}
+function result(){
+ const rank=[...RACES].sort((a,b)=>score[b.id]-score[a.id]);const r=rank[0],s=rank[1];
+ const pic=x=>x.image?`<img src="${x.image}" alt="${x.name}">`:x.emoji;
+ app.innerHTML=`<p class="tag">あなたにおすすめの種族は…</p><div class="img">${pic(r)}</div><h1>${r.name}</h1><p class="tag">${r.tagline}</p><p class="desc">${r.desc}</p>${r.note?`<p class="note">${r.note}</p>`:""}${jobsHtml(r)}<p class="second">次点: ${s.emoji} ${s.name}</p><button class="main" id="re">もう一度診断する</button>`;
+ document.getElementById("re").onclick=start}
+start();
+</script>
+</body>
+</html>
